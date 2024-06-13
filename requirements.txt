@@ -10,3 +10,5 @@ gtts
 moviepy
 requests
 pyrebase
+time
+logging
