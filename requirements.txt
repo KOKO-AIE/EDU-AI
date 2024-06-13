@@ -5,7 +5,8 @@ python-dotenv
 pathlib
 googletrans
 yt_dlp
-logging
 SpeechRecognition
 gtts
 moviepy
+requests
+pyrebase

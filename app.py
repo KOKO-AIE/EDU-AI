@@ -11,11 +11,10 @@ from gtts import gTTS
 from PIL import Image, ImageDraw, ImageFont
 import moviepy.editor as mp
 from moviepy.editor import AudioFileClip
-import firebase_admin
-from firebase_admin import credentials
+# import firebase_admin
+# from firebase_admin import credentials
 import pyrebase
 import requests
-import json
 import time
 
 PICTORY_API_BASE_URL = "https://api.pictory.ai/pictoryapis/v1"
