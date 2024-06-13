@@ -9,6 +9,6 @@ SpeechRecognition
 gtts
 moviepy
 requests
-pyrebase
+pyrebase4
 time
 logging
