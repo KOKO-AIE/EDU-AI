@@ -279,6 +279,44 @@ def generate_gemini_content(transcript_text, prompt, target_language_code, quest
         st.error("Error occurred while generating notes.")
         st.error(str(e))
         return None
+    
+# ////////////////////////////////////////////////////////////////////////////
+def generate_questions(summary):
+                question_prompt = f"Generate 5 questions based on the following summary: {summary}"
+                model = "models/text-bison-001"
+                try:
+                    response = genai.generate_text(
+                    model=model,
+                    prompt=question_prompt,
+                    temperature=0.2,
+                    candidate_count=1,
+                    top_k=40,
+                    top_p=0.95
+                )
+                    questions = response.candidates[0]['output']
+                    return questions
+                except Exception as e:
+                    st.error(f"Error generating questions: {e}")
+                    return None       
+
+def generate_answers(questions):
+    answer_prompt = f"Provide answers for the following questions: {questions}"
+    model = "models/text-bison-001"
+    try:
+        response = genai.generate_text(
+            model=model,
+            prompt=answer_prompt,
+            temperature=0.2,
+            candidate_count=1,
+            top_k=40,
+            top_p=0.95
+        )
+        answers = response.candidates[0]['output']
+        return answers
+    except Exception as e:
+        st.error(f"Error generating answers: {e}")
+        return None
+
 
 # Streamlit UI
 st.title("Video Summarizer")
@@ -338,12 +376,40 @@ if st.session_state["authenticated"]:
                     st.session_state["summary"] = summary
                     st.markdown("## Detailed Notes:")
                     st.write(summary)
+    if st.button("Generate Summary, Questions, and Answers") and youtube_link:
+        transcript = extract_transcript_details(youtube_link)
+        if transcript:
+            with st.spinner('Generating summary...'):
+                summary = generate_gemini_content(transcript, prompt, None, "summary")
+                if summary:
+            # st.write("*Summary:*")
+            # st.write(summary)
 
-    if "summary" in st.session_state:
-        summary = st.session_state["summary"]
-        st.markdown("## Detailed Notes:")
-        st.write(summary)
-        if st.button("Generate Video"):
+                    with st.spinner('Generating questions...'):
+                        questions = generate_questions(summary)
+                        if questions:
+                            st.write("*Questions:*")
+                            st.session_state["questions"] = questions
+                            for i, question in enumerate(questions.split('\n')):
+                                st.text_input(f"Question {i+1}", value=question, key=f"question_{i}")
+
+                                with st.spinner('Generating answers...'):
+                                    answers = generate_answers(questions)
+                                if answers:
+                                    st.session_state["answers"] = answers
+
+                    if "questions" in st.session_state and st.button("Check Answers"):
+                        st.write("*Correct Answers:*")
+                        st.write(st.session_state["answers"])
+
+                    if "answers" in st.session_state:
+                     st.write("*Answers:*")
+                     st.write(st.session_state["answers"])
+
+# Streamlit UI for generating questions and checking answers
+
+    # fsdfsdfffffffffffffffffffffffffff
+    if st.button("Generate Video"):
             st.info("Generating video... Please wait.")
             target_language_code = LANGUAGE_CODES.get(target_language, "en")
             video_path=generate_video_with_pictory(summary, target_language)
@@ -377,3 +443,13 @@ if st.session_state["authenticated"]:
     if st.button("Logout"):
         st.session_state["authenticated"] = False
         st.experimental_rerun()
+
+
+
+
+
+
+
+
+
+
