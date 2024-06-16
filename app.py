@@ -16,6 +16,7 @@ from moviepy.editor import AudioFileClip
 import pyrebase
 import requests
 import time
+import random
 
 PICTORY_API_BASE_URL = "https://api.pictory.ai/pictoryapis/v1"
 CLIENT_ID = "j9983f57c757ritr4f6foevt9"
@@ -128,9 +129,9 @@ def get_pictory_access_token():
 def generate_video_with_pictory(summary, target_language): 
     try:
         token = get_pictory_access_token()
-        st.write(token)
+        # st.write(token)
         job_id = get_jobid(token,summary)
-        st.write(job_id)
+        # st.write(job_id)
         # Extract video URL from the response
         # video_url = response.json().get("videoURL")
         time.sleep(60)
@@ -281,23 +282,40 @@ def generate_gemini_content(transcript_text, prompt, target_language_code, quest
         return None
     
 # ////////////////////////////////////////////////////////////////////////////
-def generate_questions(summary):
-                question_prompt = f"Generate 5 questions based on the following summary: {summary}"
-                model = "models/text-bison-001"
-                try:
-                    response = genai.generate_text(
-                    model=model,
-                    prompt=question_prompt,
-                    temperature=0.2,
-                    candidate_count=1,
-                    top_k=40,
-                    top_p=0.95
-                )
-                    questions = response.candidates[0]['output']
-                    return questions
-                except Exception as e:
-                    st.error(f"Error generating questions: {e}")
-                    return None       
+def generate_questions_and_answers(summary, num_questions=10):
+    sentences = summary.split('.')
+    questions_and_answers = []
+    question_types = [
+        "Explain the significance of the following point: {sentence}",
+        "What might be the consequences of this point: {sentence}?",
+        "What details support this point: {sentence}?",
+        "What are the broader implications of this point: {sentence}?",
+        "Can you provide an example related to this point: {sentence}?",
+        "What is your opinion about this point: {sentence}?"
+    ]
+
+    for i in range(min(num_questions, len(sentences))):
+        sentence = sentences[i].strip()
+        if sentence:
+            question_template = random.choice(question_types)
+            question = question_template.format(sentence=sentence)
+            # Generate a more elaborate answer
+            if "significance" in question:
+                answer = f"This point is important because it highlights the value and usefulness of learning how to {sentence.lower()}."
+            elif "consequences" in question:
+                answer = f"If you understand this point, you will be able to {sentence.lower()} more effectively, which can lead to better communication and understanding in Finnish."
+            elif "details support" in question:
+                answer = f"The main details that support this point are the practical applications and examples given on how to {sentence.lower()} in different contexts."
+            elif "broader implications" in question:
+                answer = f"The broader implications of this point include improved cultural awareness and the ability to engage more deeply with Finnish speakers."
+            elif "example" in question:
+                answer = f"An example related to this point would be a situation where you need to {sentence.lower()} while traveling in Finland."
+            elif "opinion" in question:
+                answer = f"My opinion about this point is that learning to {sentence.lower()} is crucial for anyone looking to effectively communicate in Finnish and understand the nuances of the language."
+
+            questions_and_answers.append({"question": question, "answer": answer})
+
+    return questions_and_answers    
 
 def generate_answers(questions):
     answer_prompt = f"Provide answers for the following questions: {questions}"
@@ -360,8 +378,12 @@ if not st.session_state["authenticated"]:
                     st.error(f"Sign up failed: {e}")
 
 if st.session_state["authenticated"]:
+    if 'questions_and_answers' not in st.session_state:
+        st.session_state.questions_and_answers = []
+    if 'show_answers' not in st.session_state:
+        st.session_state.show_answers = False
     st.write(f"Logged in as: {st.session_state.get('user_email')}")
-    youtube_link = st.text_input("Enter YouTube Video Link:")
+    youtube_link = st.text_input("Enter Video Link:")
     target_language = st.selectbox("Select Target Language for Translation:", options=list(LANGUAGE_CODES.keys()))
     question_type = st.selectbox("Select Type of Questions:", options=["Q&A", "MCQ"])
 
@@ -376,43 +398,35 @@ if st.session_state["authenticated"]:
                     st.session_state["summary"] = summary
                     st.markdown("## Detailed Notes:")
                     st.write(summary)
-    if st.button("Generate Summary, Questions, and Answers") and youtube_link:
-        transcript = extract_transcript_details(youtube_link)
-        if transcript:
-            with st.spinner('Generating summary...'):
-                summary = generate_gemini_content(transcript, prompt, None, "summary")
-                if summary:
-            # st.write("*Summary:*")
-            # st.write(summary)
+                    st.session_state.questions_and_answers = generate_questions_and_answers(summary)
+                    st.session_state.show_answers = False
 
-                    with st.spinner('Generating questions...'):
-                        questions = generate_questions(summary)
-                        if questions:
-                            st.write("*Questions:*")
-                            st.session_state["questions"] = questions
-                            for i, question in enumerate(questions.split('\n')):
-                                st.text_input(f"Question {i+1}", value=question, key=f"question_{i}")
+       
+    if st.session_state.questions_and_answers:
+        st.write("### Generated Questions:")
+        user_answers = []
+        for idx, qa in enumerate(st.session_state.questions_and_answers):
+            st.write(f"*Q{idx+1}:* {qa['question']}")
+            user_answer = st.text_input(f"Your Answer {idx+1}", key=f"user_answer_{idx}")
+            user_answers.append(user_answer)
 
-                                with st.spinner('Generating answers...'):
-                                    answers = generate_answers(questions)
-                                if answers:
-                                    st.session_state["answers"] = answers
+        check_answers_button = st.button("Check Answers")
 
-                    if "questions" in st.session_state and st.button("Check Answers"):
-                        st.write("*Correct Answers:*")
-                        st.write(st.session_state["answers"])
+        if check_answers_button:
+            st.session_state.show_answers = True
 
-                    if "answers" in st.session_state:
-                     st.write("*Answers:*")
-                     st.write(st.session_state["answers"])
-
+        if st.session_state.show_answers:
+            st.write("### Correct Answers:")
+            for idx, qa in enumerate(st.session_state.questions_and_answers):
+                st.write(f"*Q{idx+1}:* {qa['question']}")
+                st.write(f"*A{idx+1}:* {qa['answer']}")
 # Streamlit UI for generating questions and checking answers
 
     # fsdfsdfffffffffffffffffffffffffff
     if st.button("Generate Video"):
             st.info("Generating video... Please wait.")
             target_language_code = LANGUAGE_CODES.get(target_language, "en")
-            video_path=generate_video_with_pictory(summary, target_language)
+            video_path=generate_video_with_pictory(st.session_state["summary"], target_language)
             # video_path = generate_video(summary, target_language_code)
             if video_path:
                 st.session_state["video_path"] = video_path
@@ -426,7 +440,7 @@ if st.session_state["authenticated"]:
                     with open("temp_video.mp4", "wb") as f:
                         for chunk in r.iter_content(chunk_size=8192):
                             f.write(chunk)
-                        temp_video_path = f.name
+                            temp_video_path = f.name
                 
                 # st.video(temp_video_path)
 
@@ -443,11 +457,23 @@ if st.session_state["authenticated"]:
     if st.button("Logout"):
         st.session_state["authenticated"] = False
         st.experimental_rerun()
-
-
-
-
-
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
 
 
