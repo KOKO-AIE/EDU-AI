@@ -341,41 +341,41 @@ st.title("Video Summarizer")
 
 # Authentication mode selector
 if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
+    st.session_state["authenticated"] = True
 
-if not st.session_state["authenticated"]:
-    auth_mode = st.selectbox("Select Authentication Mode:", ["Login", "Sign Up"])
+# if not st.session_state["authenticated"]:
+#     auth_mode = st.selectbox("Select Authentication Mode:", ["Login", "Sign Up"])
     
-    if auth_mode == "Login":
-        st.subheader("Login")
-        username = st.text_input("Email")
-        password = st.text_input("Password", type="password")
+    # if auth_mode == "Login":
+    #     st.subheader("Login")
+    #     username = st.text_input("Email")
+    #     password = st.text_input("Password", type="password")
         
-        if st.button("Login"):
-            try:
-                user = auth.sign_in_with_email_and_password(username, password)
-                st.session_state["authenticated"] = True
-                st.session_state['user_email'] = user['email']
-                st.success("Login successful!")
-                st.experimental_rerun()
-            except Exception as e:
-                st.error(f"Login failed: {e}")
+    #     if st.button("Login"):
+    #         try:
+    #             user = auth.sign_in_with_email_and_password(username, password)
+    #             st.session_state["authenticated"] = True
+    #             st.session_state['user_email'] = user['email']
+    #             st.success("Login successful!")
+    #             st.experimental_rerun()
+    #         except Exception as e:
+    #             st.error(f"Login failed: {e}")
 
-    else:  # Sign Up form
-        st.subheader("Sign Up")
-        new_username = st.text_input("Email")
-        new_password = st.text_input("Password", type="password")
-        confirm_password = st.text_input("Confirm Password", type="password")
-        if new_password != confirm_password:
-            st.warning("Passwords do not match.")
-        else:
-            if st.button("Sign Up"):
-                try:
-                    user = auth.create_user_with_email_and_password(new_username, new_password)
-                    st.success("Sign up successful! Please login.")
-                    st.experimental_rerun()
-                except Exception as e:
-                    st.error(f"Sign up failed: {e}")
+    # else:  # Sign Up form
+    #     st.subheader("Sign Up")
+    #     new_username = st.text_input("Email")
+    #     new_password = st.text_input("Password", type="password")
+    #     confirm_password = st.text_input("Confirm Password", type="password")
+    #     if new_password != confirm_password:
+    #         st.warning("Passwords do not match.")
+    #     else:
+    #         if st.button("Sign Up"):
+    #             try:
+    #                 user = auth.create_user_with_email_and_password(new_username, new_password)
+    #                 st.success("Sign up successful! Please login.")
+    #                 st.experimental_rerun()
+    #             except Exception as e:
+    #                 st.error(f"Sign up failed: {e}")
 
 if st.session_state["authenticated"]:
     if 'questions_and_answers' not in st.session_state:
