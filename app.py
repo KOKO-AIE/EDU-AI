@@ -382,7 +382,7 @@ if st.session_state["authenticated"]:
         st.session_state.questions_and_answers = []
     if 'show_answers' not in st.session_state:
         st.session_state.show_answers = False
-    st.write(f"Logged in as: {st.session_state.get('user_email')}")
+    # st.write(f"Logged in as: {st.session_state.get('user_email')}")
     youtube_link = st.text_input("Enter Video Link:")
     target_language = st.selectbox("Select Target Language for Translation:", options=list(LANGUAGE_CODES.keys()))
     question_type = st.selectbox("Select Type of Questions:", options=["Q&A", "MCQ"])
@@ -454,9 +454,9 @@ if st.session_state["authenticated"]:
     #             mime="video/mp4"
     #         )
 
-    if st.button("Logout"):
-        st.session_state["authenticated"] = False
-        st.experimental_rerun()
+    # if st.button("Logout"):
+    #     st.session_state["authenticated"] = False
+    #     st.experimental_rerun()
         
         
         
