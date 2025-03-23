@@ -272,7 +272,7 @@ def extract_transcript_details(youtube_video_url):
 # Function to generate content with generative AI
 def generate_gemini_content(transcript_text, prompt, target_language_code, question_type):
     try:
-        model = genai.GenerativeModel("gemini-pro")
+        model = genai.GenerativeModel("gemini-2.0-flash")
         question_prompt = "Provide questions and answers" if question_type == "Q&A" else "Provide multiple choice questions"
         response = model.generate_content(prompt + f" and translate the summary into the {LANGUAGES.get(target_language_code)} language and also {question_prompt} on it in the translated language only before displaying and do not display the summary in transcript language" + transcript_text)
         return response.text
